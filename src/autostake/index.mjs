@@ -116,7 +116,9 @@ export default function Autostake(mnemonic, opts) {
     try {
       await network.load()
     } catch(e) {
-      if(e.response.status === 404){
+      // e.response is only present on HTTP errors; transport-level failures
+      // (DNS, timeout, connection reset) leave it undefined, so guard it.
+      if(e.response?.status === 404){
         failed = true
         throw new Error(`${network.name} not found in Chain Registry`)
       }

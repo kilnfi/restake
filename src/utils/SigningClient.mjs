@@ -92,10 +92,9 @@ function SigningClient(network, signer) {
   }
 
   async function signAndBroadcastWithoutBalanceCheck(address, msgs, gas, memo, gasPrice) {
-    try {
-      return await signAndBroadcast(address, msgs, gas, memo, gasPrice)
-    } finally {
-    }
+    // Thin wrapper kept for API compatibility: there is no balance check to
+    // skip anymore, so this simply delegates to the regular broadcast path.
+    return await signAndBroadcast(address, msgs, gas, memo, gasPrice)
   }
 
   async function signAndBroadcast(address, messages, gas, memo, gasPrice) {
@@ -144,7 +143,10 @@ function SigningClient(network, signer) {
       },
       (error) => {
         clearTimeout(txPollTimeout);
-        return error
+        // Re-throw instead of returning the error: returning it would convert
+        // a rejected poll (timeout / RPC failure) into a fulfilled promise and
+        // make callers treat a failed transaction as a successful one.
+        throw error
       },
     )
   }
